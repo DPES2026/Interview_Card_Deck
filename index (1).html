@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pick an Interview Card</title>
+<style>
+:root{--bg:#f6f7f5;--ink:#1a1a1a;--mute:#595959;--green:#009E73;--yellow:#F0E442;--red:#C65400;--blue:#0072B2}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink);padding:16px}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--mute);margin:0 0 12px;font-size:15px}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin-bottom:14px}
+.lg{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #d7dad7;border-radius:10px;padding:8px 10px;font-size:13px;line-height:1.3}
+.lg i{flex:none;width:22px;height:22px;border-radius:6px;border:2px solid rgba(0,0,0,.3)}
+.lg b{display:block;font-size:14px}
+.steps{display:flex;gap:8px;margin-bottom:12px}
+.step{flex:1;padding:10px 6px;border-radius:10px;border:2px solid #cfd3cf;background:#fff;text-align:center;font-size:14px;font-weight:bold;color:var(--mute)}
+.step.on{border-color:var(--ink);color:var(--ink);box-shadow:0 2px 0 var(--ink)}
+.step.done{background:#e8eae8}
+.step small{display:block;font-weight:normal;margin-top:2px}
+.msg{font-size:16px;margin:10px 0 14px;min-height:22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
+.card{display:block;width:100%;height:0;padding:0 0 66.67% 0;position:relative;perspective:800px;-webkit-perspective:800px;cursor:pointer;border:0;background:none;-webkit-appearance:none;appearance:none}
+.inner{position:absolute;top:0;left:0;right:0;bottom:0;transition:transform .6s;-webkit-transition:-webkit-transform .6s;transform-style:preserve-3d;-webkit-transform-style:preserve-3d}
+.card.flip .inner{transform:rotateY(180deg);-webkit-transform:rotateY(180deg)}
+.face{position:absolute;top:0;left:0;right:0;bottom:0;border-radius:12px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;border:3px solid rgba(0,0,0,.25);overflow:hidden}
+.front .q{font-size:38px;font-weight:bold}
+.front .n{font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:bold;margin-top:2px;text-align:center}
+.back{transform:rotateY(180deg);-webkit-transform:rotateY(180deg)}
+.back .n{font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:bold}
+.card.lock:not(.flip){opacity:.35;pointer-events:none}
+.card.gone{opacity:.15;pointer-events:none}
+.green{background:var(--green);color:#fff}.yellow{background:var(--yellow);color:#1a1a1a}
+.red{background:var(--red);color:#fff}.blue{background:var(--blue);color:#fff}
+.reveal{display:none;margin-top:18px;background:#fff;border-radius:14px;border:3px solid var(--ink);overflow:hidden}
+.reveal.show{display:block}
+.reveal .hd{padding:10px 16px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;font-size:14px}
+.reveal .bd{padding:22px 18px;font-size:24px;font-weight:bold;line-height:1.3}
+.btns{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+button.act{font:bold 16px Arial;padding:12px 20px;border-radius:10px;border:2px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer}
+button.act.alt{background:#fff;color:var(--ink)}
+button.act:disabled{opacity:.35;cursor:default}
+button.act[hidden]{display:none}
+@media(prefers-reduced-motion:reduce){.inner{transition:none}}
+</style></head><body><div class="wrap">
+<h1>Pick an Interview Card</h1>
+<p class="sub">Tap one face-down card. You can&rsquo;t see the question until you flip it. Not happy with it? You may choose one different card in each round.</p>
+<div class="legend">
+<div class="lg"><i style="background:#009E73"></i><span><b>Green</b>Warm-Up (introductory)</span></div>
+<div class="lg"><i style="background:#F0E442"></i><span><b>Yellow</b>Stretch (behavioural)</span></div>
+<div class="lg"><i style="background:#C65400"></i><span><b>Red</b>Challenge (situational)</span></div>
+<div class="lg"><i style="background:#0072B2"></i><span><b>Blue</b>Field Work (technical &amp; field readiness); &ldquo;Field - CB&rdquo; marks CB field questions</span></div>
+</div>
+<div class="steps" id="steps"></div>
+<div class="msg" id="msg"></div>
+<div class="grid" id="grid"></div>
+<div class="reveal" id="reveal"><div class="hd" id="hd"></div><div class="bd" id="bd"></div></div>
+<div class="btns"><button class="act alt" id="swap" hidden>Choose a different card (1 per round)</button>
+<button class="act" id="next" disabled>Next round</button>
+<button class="act alt" id="reset">Start over (new student)</button></div>
+</div>
+<script>
+const Q={"green": [{"q": "Tell me about yourself."}, {"q": "Can you walk me through your resume?"}, {"q": "What are your strengths when working in a team environment?"}, {"q": "What are your weaknesses?"}, {"q": "Where do you see yourself in five years?"}, {"q": "What accomplishment are you proudest of and why?"}, {"q": "What is your expected salary?"}, {"q": "What is your favorite animal and why?"}, {"q": "What made you apply for this job?"}, {"q": "What are your top three skills that make you the best candidate for this position?"}, {"q": "What is your long-term career goal?"}, {"q": "Why do you want to work at this organization specifically?"}], "yellow": [{"q": "Tell me about a time you worked as part of a team and things did not go as planned. What did you learn?"}, {"q": "Describe a situation in which you were in conflict with a supervisor or colleague. How did you deal with it?"}, {"q": "Tell me about a time you demonstrated initiative and resourcefulness."}, {"q": "Tell me about a time you went above and beyond what was expected of you."}, {"q": "Describe a time you had to manage competing priorities in order to deliver a project successfully and on time."}, {"q": "Tell me about a time you had to adapt to a colleague's very different working style."}, {"q": "Describe a time you completed a project or task with little to no supervision."}, {"q": "Describe a time you had to work under a tight deadline."}, {"q": "Give an example of a time you used problem-solving skills to work through a challenge."}, {"q": "Describe a time you had a disagreement with a coworker and how you resolved it."}, {"q": "Tell me about a time you incorporated the principles of equity, diversity, and inclusion into your work."}, {"q": "Describe a time you had to analyze data and present your findings to others."}, {"q": "This role requires candidates to be skillful in critical thinking, collaboration and writing. Which experiences, be they educational or professional, have you had that developed these skills?"}], "red": [{"q": "You and a coworker are out on a boat and the engine dies while strong winds start pushing you off course. What do you do?", "t": "CB"}, {"q": "You start a new role and your supervisor hasn't contacted you or assigned you any work in over a week. What do you do?"}, {"q": "You have three assignments due on the same day. How would you plan your time to make sure all three get done and handed in on time?"}, {"q": "A teammate isn't contributing their share of the work and the deadline is approaching. What do you do?"}, {"q": "You notice a colleague not following proper safety procedure. What do you do?"}, {"q": "You're assigned a task with unclear instructions and your supervisor is unavailable. What do you do?"}, {"q": "You discover a significant error close to a deadline. What are your next steps?"}, {"q": "A client or stakeholder is unhappy with the final product of a project. How do you handle the situation to maintain the relationship?"}, {"q": "You're given an urgent new task while already facing a deadline today. How do you handle it?"}, {"q": "If you noticed a colleague doing something unethical, such as time theft or misusing government funds, what would you do?"}, {"q": "You're part of a team with no clear project leader, a heavy workload, and an approaching deadline. What do you do?"}, {"q": "Your supervisor assigns you a task due at the end of the day, then returns later with another urgent assignment. What do you do?"}], "blue": [{"q": "Describe your comfort level with fieldwork in remote locations or challenging weather conditions."}, {"q": "You're in the field and a piece of equipment fails mid-task. What do you do?"}, {"q": "What steps would you take to make sure field or lab data is ready for analysis?"}, {"q": "Do you have experience with GIS or ArcGIS? If tasked with producing a species distribution map, what layers or data would you need?"}, {"q": "Name three species at risk in Canada and describe the main threats to one of them.", "t": "CB"}, {"q": "Name a protected area and give three reasons why protected areas are important.", "t": "CB"}, {"q": "What are the ecological functions performed by a wetland?", "t": "CB"}, {"q": "What PPE needs to be worn when working with organic solvents, and why is the buddy system important?", "t": "Lab"}, {"q": "What is the difference between precision and accuracy in scientific measurements?", "t": "Lab"}, {"q": "How comfortable are you with extended travel to remote work sites, and do you have a valid driver's license?"}, {"q": "Describe your experience communicating scientific results to a non-technical audience."}, {"q": "What would you do if you realized key field equipment was missing right before a sampling trip?"}]};
+const NAMES={green:"Warm-Up",yellow:"Stretch",red:"Challenge",blue:"Field Work"};
+const ROUNDS=[{colors:["green"],label:"Green only"},{colors:["yellow","red"],label:"Yellow or Red"},{colors:["yellow","red","blue"],label:"Yellow, Red or Blue"}];
+const PER_ROUND=12;
+let round=0,used=new Set(),picked=false,swapUsed=false,cur=null,deck=[];
+const $=id=>document.getElementById(id);
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function label(d){return d.c==="blue"&&d.t==="CB"?"Field - CB":NAMES[d.c]}
+function fresh(c){return Q[c].filter(x=>!used.has(x.q))}
+function draw(c,per){
+  let out=[];
+  if(c==="blue"){
+    const cb=shuffle(fresh(c).filter(x=>x.t==="CB")),ot=shuffle(fresh(c).filter(x=>x.t!=="CB"));
+    const nCb=Math.min(Math.ceil(per/2),cb.length);
+    out=cb.slice(0,nCb).concat(ot.slice(0,per-nCb));
+    if(out.length<per)out=out.concat(cb.slice(nCb,nCb+per-out.length));
+  }else out=shuffle(fresh(c)).slice(0,per);
+  return out.map(x=>({c:c,q:x.q,t:x.t}));
+}
+function build(){
+  picked=false;swapUsed=false;cur=null;
+  $("reveal").className="reveal";$("next").disabled=true;$("swap").hidden=true;
+  $("steps").innerHTML=ROUNDS.map((r,i)=>`<div class="step ${i===round?"on":i<round?"done":""}">Round ${i+1}<small>${r.label}</small></div>`).join("");
+  $("msg").textContent="Round "+(round+1)+": choose one card.";
+  const cols=ROUNDS[round].colors,per=Math.ceil(PER_ROUND/cols.length);
+  deck=[];cols.forEach(c=>{deck=deck.concat(draw(c,per))});
+  deck=shuffle(deck).slice(0,PER_ROUND);
+  $("grid").innerHTML=deck.map((d,i)=>`<button class="card" data-i="${i}" aria-label="Face-down ${label(d)} card"><div class="inner">
+    <div class="face front ${d.c}"><div class="q">?</div><div class="n">${label(d)}</div></div>
+    <div class="face back ${d.c}"><div class="n">${label(d)}</div></div></div></button>`).join("");
+  document.querySelectorAll(".card").forEach((el,i)=>el.onclick=()=>pick(el,deck[i]));
+}
+function pick(el,d){
+  if(picked)return;picked=true;cur=el;used.add(d.q);
+  document.querySelectorAll(".card").forEach(c=>c.classList.add("lock"));
+  el.classList.add("flip");
+  setTimeout(()=>{
+    const h=$("hd");h.textContent=label(d)+" \u00B7 Round "+(round+1);h.className="hd "+d.c;
+    $("bd").textContent=d.q;$("reveal").className="reveal show";
+    $("reveal").scrollIntoView({behavior:"smooth",block:"nearest"});
+    $("swap").hidden=swapUsed;
+    if(round<ROUNDS.length-1){$("next").disabled=false;$("msg").textContent="Your question for round "+(round+1)+":"}
+    else{$("msg").textContent=swapUsed?"Your final question:":"Your question for round 3:"}
+  },450);
+}
+$("swap").onclick=()=>{
+  if(swapUsed||!picked)return;swapUsed=true;picked=false;
+  cur.classList.remove("flip");cur.classList.add("gone");
+  document.querySelectorAll(".card").forEach(c=>c.classList.remove("lock"));
+  $("reveal").className="reveal";$("swap").hidden=true;$("next").disabled=true;
+  $("msg").textContent="Round "+(round+1)+": choose a different card (this is your last pick for this round).";
+  window.scrollTo({top:0,behavior:"smooth"});
+};
+$("next").onclick=()=>{if(round<ROUNDS.length-1){round++;build();window.scrollTo({top:0,behavior:"smooth"})}};
+$("reset").onclick=()=>{round=0;used=new Set();build();window.scrollTo({top:0})};
+build();
+</script></body></html>
